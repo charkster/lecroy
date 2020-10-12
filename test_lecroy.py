@@ -6,8 +6,7 @@ from   lecroy import lecroy
 
 rm = pyvisa.ResourceManager()
 #print rm.list_resources()
-#USB0::0x0000::0x0000:C123456::INSTR
-lecroy = lecroy(pyvisa_instr=rm.open_resource('USB0::1535::4131::3807N02282::0::INSTR'))
+lecroy = lecroy(pyvisa_instr=rm.open_resource('USB0::0x0000::0x0000:C123456::INSTR'))
 
 # label, ver_scale, ver_offset, bw, coupling
 analog_channels = {
