@@ -240,4 +240,40 @@ class lecroy():
     def set_intensity(self, percent=100):
         self.scope.write('VBS app.Display.PersistenceSaturation= {0}'.format(percent))
 
+    def get_channel_from_tuple_signal_name(self, analog_channels, signal_name=''):
+        for channel in analog_channels.keys():
+            if (analog_channels[channel][0] == signal_name):
+                return channel
 
+    # the scope already needs to be in auto sampling, in order to get measure data
+    # div_offset of zero is the center, valid values are between 3 and -4 (float values ok)
+    def update_signal_offset(self, analog_channels, signal_name='', div_offset=0, meas_type='median'):
+        # save P1 config before we over-write them
+        save_p1_view   = self.scope.query('VBS? return = app.Measure.P1.View')
+        save_p1_view = save_p1_view[4:] if "VBS" in save_p1_view else save_p1_view
+        save_p1_source = self.scope.query('VBS? return = app.Measure.P1.Source1')
+        save_p1_source = save_p1_source[4:] if "VBS" in save_p1_source else save_p1_source
+        save_p1_param  = self.scope.query('VBS? return = app.Measure.P1.ParamEngine')
+        save_p1_param = save_p1_param[4:] if "VBS" in save_p1_param else save_p1_param
+        signal_channel = self.get_channel_from_tuple_signal_name(analog_channels,signal_name)
+        ver_scale = analog_channels[signal_channel][1]
+        # ver_scale = self.scope.query('VBS? return = app.Acquisition.{0}.VerScale'.format(signal_channel))
+        # measure the signal on the P1 measure config
+        self.scope.write('VBS app.Measure.P1.View=True')
+        self.scope.write('VBS app.Measure.P1.Source1="C{0}"'.format(signal_channel))
+        self.scope.write('VBS app.Measure.P1.ParamEngine="{0}"'.format(meas_type))
+        value = self.getValueOnChannel('P1', stat_type='value')
+        offset = (div_offset * ver_scale) - value
+        self.scope.write('VBS app.Acquisition.C{0}.VerOffset={1}'.format(signal_channel, offset))
+        # restore P1 saved config
+        if (save_p1_view.replace('\n','') == '0'):
+            self.scope.write('VBS app.Measure.P1.View=False')
+        else:
+            self.scope.write('VBS app.Measure.P1.View=True')
+        self.scope.write('VBS app.Measure.P1.Source1="{0}"'.format(save_p1_source.replace('\n','')))
+        self.scope.write('VBS app.Measure.P1.ParamEngine="{0}"'.format(save_p1_param.replace('\n','')))
+
+    def set_memory_size(self, memory_size='2.5E+6'):
+        self.scope.write('memory_size {0}'.format(memory_size))
+        # self.scope.query('memory_size?')
+        #self.scope.write('VBS app.Acquisition.Horizontal.MaxSamples={}'.format(memory_size))
