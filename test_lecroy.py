@@ -53,6 +53,7 @@ lecroy.measurement_levelatx(meas_channel=11, position=-1.0e-6)     #before trigg
 lecroy.measurement_levelatx(meas_channel=12, position=1.599992e-3) #last captured value
 lecroy.trigger_setup(channel='C4', trig_level=0.25, trig_horizontal=hor_scale * (-3), trig_slope='Positive', trig_mode='Auto')
 time.sleep(2)
+lecroy.update_signal_offset(analog_channels, 'LITTLE_I1', 0) #adjust the offset for 'LITTLE_I1' signal to be on the center division
 lecroy.trigger_setup(channel='C4', trig_level=0.25, trig_horizontal=hor_scale * (-3), trig_slope='Positive', trig_mode='Single')
 
 lecroy.get_screen_image('super_awesome_waveform_12')
