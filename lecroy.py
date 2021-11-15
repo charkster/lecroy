@@ -47,7 +47,7 @@ class lecroy():
         if (channel.startswith('C')):
             self.scope.write('VBS app.Acquisition.Trigger.Coupling="AC"'.format(channel))
 
-    def channel_setup(self, analog_ch_dict, digital_ch_dict):
+    def channel_setup(self, analog_ch_dict={}, digital_ch_dict={}, math_ch_dict={}):
         """
         This adjusts the analog and digital channels of the LeCroy scope, based on the parameters received.
         :param scope: This is the Lecroy scope object
@@ -75,13 +75,28 @@ class lecroy():
                 0: 'vbus1_uv',
                 1: 'vbus12bat'
             }
+
+            #--- MATH CHANNELS ---
+            # - label, operator, source1, source2, vertical scale, vertical center
+            math_channels = {
+                3: ('VIN-VOUT', 'Difference', 'C1', 'C2', 1.00, 47e-3)
+            }
         """
         ch_desc = {
-            'label'     : 0,
-            'ver_scale' : 1,
+            'label': 0,
+            'ver_scale': 1,
             'ver_offset': 2,
-            'bw'        : 3,  # '20MHz', 'Full'
-            'coupling'  : 4,  # 'DC50', 'Gnd', 'DC1M', 'AC1M'
+            'bw': 3,  # '20MHz', 'Full'
+            'coupling': 4,  # 'DC50', 'Gnd', 'DC1M', 'AC1M'
+        }
+
+        math_ch_desc = {
+            'label':      0,
+            'operator':   1, # 'Difference'
+            'source1':    2, # 'C1'
+            'source2':    3, # 'C2'
+            'ver_scale':  4,
+            'ver_center': 5,
         }
 
         # --- Turn off all analog channels ---
@@ -101,20 +116,36 @@ class lecroy():
         self.scope.write('VBS app.Display.TraceIntensity=100')
 
         # ***** Digital Channel Section ******************************************************************
+        # REMEMBER TO MANUALLY TURN THE DISPLAY OF DIGITAL SIGNALS, SCPI can't do that
         # --- Turn off all digital channels ---
         for sweep_channels in range(0, 16):
             self.scope.write('VBS app.LogicAnalyzer.Digital1.Digital{0}.Value=false'.format(sweep_channels))
-        
-        # --- Turn on only listed digital channels and set up ---
+        # --- Turn on all listed digital channels and set up ---
         for k, v in digital_ch_dict.items():
             self.scope.write('VBS app.LogicAnalyzer.Digital1.Digital{0}.Value=true'.format(k))
             self.scope.write('VBS app.LogicAnalyzer.Digital1.CustomBitName{0}.Value="{1}"'.format(k, v))
-        
         self.scope.write('VBS app.LogicAnalyzer.Digital1.View=true')
         self.scope.write('VBS app.LogicAnalyzer.Digital1.VerPosition=4.00')
         self.scope.write('VBS app.LogicAnalyzer.Digital1.GroupHeight=1.00')
         self.scope.write('VBS app.LogicAnalyzer.Digital1.Labels="CUSTOM"')
         # ***** End Digital Channel Section **************************************************************
+
+        # ***** Math Channel Section ******************************************************************
+        # --- Turn off all math channels ---
+        for sweep_channels in range(0, 13):
+            self.scope.write('VBS app.Math.F{0}.View=false'.format(sweep_channels))
+        # --- Turn on listed math channels ---
+        for k, v in math_ch_dict.items():
+            self.scope.write('VBS app.Math.F{0}.View=True'.format(k))
+            self.scope.write('VBS app.Math.F{0}.ViewLabels=True'.format(k))
+            self.scope.write('VBS app.Math.F{0}.LabelsText="{1}"'.format(k, v[math_ch_desc['label']]))
+            self.scope.write('VBS app.Math.F{0}.Operator1="{1}"'.format(k, v[math_ch_desc['operator']]))
+            self.scope.write('VBS app.Math.F{0}.Source1="{1}"'.format(k, v[math_ch_desc['source1']]))
+            self.scope.write('VBS app.Math.F{0}.Source2="{1}"'.format(k, v[math_ch_desc['source2']]))
+            self.scope.write('VBS app.Math.F{0}.Zoom.VerCenter={1}'.format(k, v[math_ch_desc['ver_center']]))
+            time.sleep(2)
+            self.scope.write('VBS app.Math.F{0}.Zoom.VerScale={1}'.format(k, v[math_ch_desc['ver_scale']]))
+        # ***** End math Channel Section **************************************************************
 
     def trigger_force(self):
         # Force a trigger event (when the scope is in the ready state)
@@ -277,3 +308,22 @@ class lecroy():
         self.scope.write('memory_size {0}'.format(memory_size))
         # self.scope.query('memory_size?')
         #self.scope.write('VBS app.Acquisition.Horizontal.MaxSamples={}'.format(memory_size))
+
+    def channel_colors(self, c1_color=0x00FF00, c2_color=0x00FFFF, c3_color=0x0000FF, c4_color=0xFF0000, c5_color=0xFF0080, c6_color=0x00a5FF, c7_color=0x8000FF, c8_color=0xCC0000 ):
+        self.scope.write('VBS app.Hardcopy.PrintLogo=False')
+        self.scope.write('VBS app.Display.C1Color="{0}"'.format(c1_color))
+        self.scope.write('VBS app.Display.C2Color="{0}"'.format(c2_color))
+        self.scope.write('VBS app.Display.C3Color="{0}"'.format(c3_color))
+        self.scope.write('VBS app.Display.C4Color="{0}"'.format(c4_color))
+        self.scope.write('VBS app.Display.C5Color="{0}"'.format(c5_color))
+        self.scope.write('VBS app.Display.C6Color="{0}"'.format(c6_color))
+        self.scope.write('VBS app.Display.C7Color="{0}"'.format(c7_color))
+        self.scope.write('VBS app.Display.C8Color="{0}"'.format(c8_color))
+        self.scope.write('VBS app.Display.C1PrintColor="{0}"'.format(c1_color))
+        self.scope.write('VBS app.Display.C2PrintColor="{0}"'.format(c2_color))
+        self.scope.write('VBS app.Display.C3PrintColor="{0}"'.format(c3_color))
+        self.scope.write('VBS app.Display.C4PrintColor="{0}"'.format(c4_color))
+        self.scope.write('VBS app.Display.C5PrintColor="{0}"'.format(c5_color))
+        self.scope.write('VBS app.Display.C6PrintColor="{0}"'.format(c6_color))
+        self.scope.write('VBS app.Display.C7PrintColor="{0}"'.format(c7_color))
+        self.scope.write('VBS app.Display.C8PrintColor="{0}"'.format(c8_color))
