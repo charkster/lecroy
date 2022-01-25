@@ -147,6 +147,28 @@ class lecroy():
             self.scope.write('VBS app.Math.F{0}.Zoom.VerScale={1}'.format(k, v[math_ch_desc['ver_scale']]))
         # ***** End math Channel Section **************************************************************
 
+    def get_analog_channel_setup(self):
+        analog_channels = {}
+        for sweep_channels in range(1, 9):
+            if (int(self.scope.query('VBS? return = app.Acquisition.C{0}.View'.format(sweep_channels))) == -1):
+                label = ''
+                if (int(self.scope.query('VBS? return = app.Acquisition.C{0}.ViewLabels'.format(sweep_channels))) == -1):
+                    label = str(self.scope.query('VBS? return = app.Acquisition.C{0}.labelsText'.format(sweep_channels)).strip())
+                ver_scale     = float(self.scope.query('VBS? return = app.Acquisition.C{0}.VerScale'.format(sweep_channels)))
+                ver_offset    = float(self.scope.query('VBS? return = app.Acquisition.C{0}.VerOffset'.format(sweep_channels)))
+                bandwidth_lim = str(self.scope.query('VBS? return = app.Acquisition.C{0}.BandwidthLimit'.format(sweep_channels)).strip())
+                coupling      = str(self.scope.query('VBS? return = app.Acquisition.C{0}.Coupling'.format(sweep_channels)).strip())
+                analog_channels[sweep_channels] = (label, ver_scale, ver_offset, bandwidth_lim, coupling)
+        return analog_channels
+
+    def get_digital_channel_setup(self):
+        digital_channels = {}
+        for sweep_channels in range(0, 16):
+            if (int(self.scope.query('VBS? return = app.LogicAnalyzer.Digital1.Digital{0}.Value'.format(sweep_channels))) == -1):
+                label = str(self.scope.query('VBS? return = app.LogicAnalyzer.Digital1.CustomBitName{0}.Value'.format(sweep_channels)).strip())
+                digital_channels[sweep_channels] = label
+        return digital_channels
+        
     def trigger_force(self):
         # Force a trigger event (when the scope is in the ready state)
         self.scope.write('FORCE_TRIGGER')
@@ -213,6 +235,15 @@ class lecroy():
             self.scope.write('VBS app.Measure.P{0}.Source1="{1}"'.format(k, v[meas_desc['source']]))
             self.scope.write('VBS app.Measure.P{0}.ParamEngine="{1}"'.format(k, v[meas_desc['measurement']]))
 
+    def get_measurement_setup(self):
+        measure_channels = {}
+        for sweep_channels in range(1, 13):
+            if (int(self.scope.query('VBS? return = app.Measure.P{0}.View'.format(sweep_channels))) == -1):
+                source      = str(self.scope.query('VBS? return = app.Measure.P{0}.Source1'.format(sweep_channels)).strip())
+                measurement = str(self.scope.query('VBS? return = app.Measure.P{0}.ParamEngine'.format(sweep_channels)).strip())
+                measure_channels[sweep_channels] = (source, measurement)
+        return measure_channels
+            
     def measurement_levelatx(self, meas_channel='1', position=0.0):
         self.scope.write('VBS app.Measure.P{0}.operator.horvalue={1}'.format(meas_channel,position))
 
