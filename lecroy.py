@@ -116,7 +116,7 @@ class lecroy():
         self.scope.write('VBS app.Display.TraceIntensity=100')
 
         # ***** Digital Channel Section ******************************************************************
-        # REMEMBER TO MANUALLY TURN THE DISPLAY OF DIGITAL SIGNALS, SCPI can't do that
+
         # --- Turn off all digital channels ---
         for sweep_channels in range(0, 16):
             self.scope.write('VBS app.LogicAnalyzer.Digital1.Digital{0}.Value=false'.format(sweep_channels))
