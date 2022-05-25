@@ -46,6 +46,26 @@ class lecroy():
         self.scope.write('VBS app.Acquisition.TriggerMode="{0}"'.format(trig_mode))
         if (channel.startswith('C')):
             self.scope.write('VBS app.Acquisition.Trigger.Coupling="AC"'.format(channel))
+    
+    # { 0 : channel, 1 : trig_level, 2 : horiz_offset, 3 : trig_slope, 4 : trig_mode, 5 : trig_type }
+    def trigger_setup_dict(self, trigger_dict={0 : 'C1', 1 : 0.25, 2: 0.0, 3 : 'Either', 4 : 'Auto', 5 : 'Edge'}):
+        self.scope.write('VBS app.Acquisition.Trigger.Source="{0}"'.format(trigger_dict[0]))
+        self.scope.write('VBS app.Acquisition.Trigger.Edge.Level={0}'.format(trigger_dict[1]))
+        self.scope.write('VBS app.Acquisition.Horizontal.HorOffset={0}'.format(trigger_dict[2]))
+        self.scope.write('VBS app.Acquisition.Trigger.Edge.Slope="{0}"'.format(trigger_dict[3]))
+        self.scope.write('VBS app.Acquisition.TriggerMode="{0}"'.format(trigger_dict[4]))
+        self.scope.write('VBS app.Acquisition.Trigger.Type={0}'.format(trigger_dict[5]))
+        if (trigger_dict[0].startswith('C')):
+            self.scope.write('VBS app.Acquisition.Trigger.Coupling="AC"'.format(trigger_dict[0]))
+    
+    def get_trigger_setup(self):
+        channel    = self.scope.query('VBS? return = app.Acquisition.Trigger.Source').strip()
+        trig_level = float(self.scope.query('VBS? return = app.Acquisition.Trigger.Edge.Level').strip())
+        trig_horiz = float(self.scope.query('VBS? return = app.Acquisition.Horizontal.HorOffset').strip())
+        trig_slope = self.scope.query('VBS? return = app.Acquisition.Trigger.Edge.Slope').strip()
+        trig_mode  = self.scope.query('VBS? return = app.Acquisition.TriggerMode').strip()
+        trig_type  = self.scope.query('VBS? return = app.Acquisition.Trigger.Type').strip()
+        return {0 : channel, 1 : trig_level, 2 : trig_horiz, 3: trig_slope, 4 : trig_mode, 5 : trig_type}
 
     def channel_setup(self, analog_ch_dict={}, digital_ch_dict={}, math_ch_dict={}):
         """
@@ -176,6 +196,10 @@ class lecroy():
     def horizontal_scale(self, scale=1E-3):
         self.scope.write('TDIV %e' % scale)
         self.scope.write('app.Acquisition.Horizontal.Maximize = "MODE"')
+        
+    def get_horizontal_scale(self):
+        horizontal_scale = float(self.scope.query('VBS? return = app.Acquisition.Horizontal.HorScale').strip())
+        return horizontal_scale
 
     def set_date_and_time(self, year=None, month=None, day=None, hour=None, minute=None, second=None):
         # any part of the date or time is not given, system date and time for the missing part will be used
