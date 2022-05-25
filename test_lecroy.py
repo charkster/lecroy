@@ -46,16 +46,20 @@ time.sleep(2)
 lecroy.set_date_and_time() # use system date and time
 lecroy.setGrid('Single')
 lecroy.channel_setup(analog_channels, digital_channels)
+lecroy.get_analog_channel_setup()
+lecroy.get_digital_channel_setup()
 hor_scale = 0.2*lecroy.unit_ms
 lecroy.horizontal_scale(hor_scale)
+lecroy.get_horizontal_scale()
 lecroy.measurement_setup(measurement_channels)
 lecroy.measurement_levelatx(meas_channel=11, position=-1.0e-6)     #before trigger
 lecroy.measurement_levelatx(meas_channel=12, position=1.599992e-3) #last captured value
+lecroy.get_measurement_setup()
 lecroy.trigger_setup(channel='C4', trig_level=0.25, trig_horizontal=hor_scale * (-3), trig_slope='Positive', trig_mode='Auto')
 time.sleep(2)
 lecroy.update_signal_offset(analog_channels, 'LITTLE_I1', 0) #adjust the offset for 'LITTLE_I1' signal to be on the center division
 lecroy.trigger_setup(channel='C4', trig_level=0.25, trig_horizontal=hor_scale * (-3), trig_slope='Positive', trig_mode='Single')
-
+lecroy.get_trigger_setup()
 lecroy.get_screen_image('super_awesome_waveform_12')
 
 max_C1                  = "{:.3f}".format(lecroy.getValueOnChannel('P1', 'value'))
